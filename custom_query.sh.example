@@ -1,0 +1,3 @@
+# add additional stuff to the elktail query here
+query="$query AND (dst_ip.raw:10.0.0.*)"
+

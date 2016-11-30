@@ -1,0 +1,5 @@
+unseen_connections.yml
+custom_query.sh
+.rbenv-*
+config.yml
+vendor/bundle

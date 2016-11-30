@@ -1,0 +1,15 @@
+---
+# unseen_connections.rb config file
+# all keys are symbols
+# 7 days in seconds
+:remember_for: 604800
+# 1 hour in seconds
+:save_interval: 3600
+:airbrake:
+  :project_id: 12345
+  :project_key: deadbeef23
+:networks:
+  # name with regular expression to match against ip
+  :staging: !ruby/regexp /10.0.0/
+  :production: !ruby/regexp /10.0.1/
+
