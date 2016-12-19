@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+# 
+# identify-ip-protocol-port: script to identify an ip port combination
+# 
+# Usage:
+# 
+#   $ identify-ip-protocol-port 8.8.8.8 udp 53
+#   {
+#     "ip": "8.8.8.8",
+#     "protocol": "udp",
+#     "port": "53",
+#     "service_name": "domain",
+#     "host": "google-public-dns-a.google.com"
+#   }
+#
+require_relative '../lib/identify_util.rb'
+require 'json'
+
+def usage
+  puts File.read(__FILE__).scan(/^# (.*)$/)
+  exit 0
+end
+
+usage if ARGV.empty?
+
+ip, protocol, port = *ARGV
+puts JSON.pretty_generate(IdentifyUtil.ip_protocol_port(ip, protocol, port))
+

@@ -3,3 +3,5 @@ custom_query.sh
 .rbenv-*
 config.yml
 vendor/bundle
+vendor/cache
+.bundle/config
