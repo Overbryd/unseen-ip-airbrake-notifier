@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "unseen-ip-to-airbrake"
-  s.version     = "1.0.0"
+  s.version     = "1.0.1"
   s.date        = "2016-12-19"
   s.summary     = "Unseen IP to Airbrake"
   s.description = "Capture unseen IP addresses connection attempts and report them to Airbrake"
