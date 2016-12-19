@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# 
+# unseen-connections: script to notify about unseen connection attempts
+# 
+# Usage:
+# 
+#   elktail -f '%@timestamp,%src_ip,%dst_ip,%protocol,%src_port' 'type:cisco-firewall AND action:Built AND direction:outbound' \
+#   | unseen-connections
+# 
+# Synopsis:
+# 
+#   The script expects input on STDIN, one line per firewall log entry.
+#   Each line must be formatted, including the fields %@timestamp, %src_ip, %dst_ip, %protocol and %src_port.
+# 
+#     %@timestamp,%src_ip,%dst_ip,%protocol,%src_port\n
+# 
+#   e.g.
+# 
+#     2016-11-29T10:36:05.990Z,50.31.164.146,10.248.177.12,TCP,443\n
+# 
+#   It remembers each destination ip:port combination for a given time.
+#   Over multiple runs it restores and saves its state with a YAML file.
+# 
+#   New ip:port combinations are reported to Airbrake with
+#   their respective environment and additional information.
+# 
+#   Airbrake in turn alerts the current Sherrif in charge via Pivotaltracker.
+# 
+# Dependencies:
+# 
+#   * A tool that can stream data out of the ELK stack and format its output as described above.
+#     For example 'elktail' (https://github.com/knes1/elktail/releases) does the job really well.
+# 
+#   * An Airbrake account project_id and project_key.
+# 
+#   * A yaml configuration file with symbol keys, including:
+# 
+#      ---
+#      # all keys are symbols
+#      # 7 days in seconds
+#      :remember_for: 604800
+#      # 1 hour in seconds
+#      :save_interval: 3600
+#      # were to save state
+#      :state_file: path/to/state.yml
+#      :airbrake:
+#        :project_id: <your airbrake project id>
+#        :project_key: <your airbrake project key>
+#      :networks:
+#        # name with regular expression to match against ip
+#        :staging: !ruby/regexp /10.248.177/
+#        :production: !ruby/regexp /10.248.237/
+require_relative '../lib/unseen_connections_monitor.rb'
+require 'optparse'
+
+def usage
+  puts File.read(__FILE__).scan(/^# (.*)$/)
+  exit 0
+end
+
+help = false
+config_file = 'config.yml'
+OptionParser.new do |options|
+  options.on('-cFILE', '--config=FILE', 'Set configuration file [config.yml]') do |value|
+    config_file = value
+  end
+  options.on('-h', '--help', 'Display help') do
+    usage
+  end
+end.parse!
+
+monitor = UnseenConnectionsMonitor.new(config: YAML.load_file(config_file))
+
+at_exit { monitor.close }
+
+while line = STDIN.gets
+  datetime, from_ip, to_ip, protocol, port = line.strip.split(",")
+  warning = monitor.feed(datetime: datetime, from_ip: from_ip, protocol: protocol, to_ip: to_ip, port: port)
+  STDERR.puts(warning.message) if warning
+end
+
